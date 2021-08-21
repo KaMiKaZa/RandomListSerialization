@@ -6,12 +6,24 @@ using System.Text;
 
 namespace RandomListSerialization {
   public class ListNode {
-
+    /// <summary>
+    /// Элемент последовательности, который является предыдущим к текущему
+    /// </summary>
+    /// <remarks>
+    /// null указывает, что текущий элемент является первым в последовательности
+    /// </remarks>
     public ListNode Prev;
+
+    /// <summary>
+    /// Элемент последовательности, который является следующим за текущим
+    /// </summary>
+    /// <remarks>
+    /// null указывает, что текущий элемент является последним в последовательности
+    /// </remarks>
     public ListNode Next;
 
     /// <summary>
-    /// Произвольный элемент внутри списка 
+    /// Ссылка на произвольный элемент внутри списка 
     /// </summary>
     public ListNode Rand;
 
@@ -31,7 +43,15 @@ namespace RandomListSerialization {
 
   public class ListRand {
     public static readonly Encoding encoding = Encoding.UTF8;
+
+    /// <summary>
+    /// Символ, который разделяет узлы между собой во время сериализации
+    /// </summary>
     public const char endLineSymbol = '\n';
+
+    /// <summary>
+    /// Символ, который разделяет информацию об одном узле на части во время сериализации
+    /// </summary>
     public const char inlineDelimiter = '\t';
 
     /// <summary>
@@ -58,6 +78,12 @@ namespace RandomListSerialization {
       Count = count;
     }
 
+    /// <summary>
+    /// Применяет переданную функцию к каждому пройденному узлу
+    /// </summary>
+    /// <remarks>Выполняет обход по направлению от node к концу списка</remarks>
+    /// <param name="mapper">Произвольная функция, которая будет вызвана на каждом пройденном узле</param>
+    /// <param name="node">Узел, с которого будет начат обход списка</param>
     private void MapList(Action<ListNode> mapper, ListNode node) {
       if (node == null) {
         return;
@@ -68,9 +94,14 @@ namespace RandomListSerialization {
       MapList(mapper, node.Next);
     }
 
+    /// <summary>
+    /// Выполняет сериализацию текущего объекта
+    /// </summary>
+    /// <param name="s">Файловый поток, в который будет записан сериализованный объект</param>
     public void Serialize(FileStream s) {
       s.Write(encoding.GetBytes($"{Count}{endLineSymbol}"));
 
+      // Используется для индексации узлов и последующего сохранения ссылок на Rand в файл
       Dictionary<ListNode, int> randNodeIndexes = new();
 
       MapList(node => randNodeIndexes.Add(node, randNodeIndexes.Count), Head);
@@ -82,8 +113,11 @@ namespace RandomListSerialization {
       }, Head);
     }
 
+    /// <summary>
+    /// Выполняет десериализацию из файла, перезаписывая данные текущего объекта
+    /// </summary>
+    /// <param name="s">Файловый поток, из которого будет считан сериализованный объект</param>
     public void Deserialize(FileStream s) {
-      Dictionary<int, ListNode> indexNodes = new();
       List<byte> allBytes = new();
       int intByte;
 
@@ -98,6 +132,9 @@ namespace RandomListSerialization {
         .ToList();
 
       Count = int.Parse(allLines[0]);
+
+      // Используется для индексации узлов и последующего восстановления ссылок на Rand из файла
+      Dictionary<int, ListNode> indexNodes = new();
 
       for (int index = 0; index < Count; index++) {
         ListNode node = new(allLines[index + 1]);
