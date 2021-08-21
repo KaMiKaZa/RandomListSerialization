@@ -56,6 +56,18 @@ namespace RandomListSerialization {
       Assert.True(serializedFileInfo.Exists && serializedFileInfo.Length > 0);
     }
 
+    /// <summary>
+    /// Преобразует массив узлов в одну строку, которая будет содержать значения
+    /// <see cref="ListNode.Data">Data</see> самих узлов и узлов, на который они ссылаются
+    /// </summary>
+    /// <param name="nodes">Массив узлов</param>
+    /// <returns>Строка, в которую сконкатенирован массив узлов</returns>
+    private string ReduceNodeList(IEnumerable<ListNode> nodes) {
+      var nodeStrings = nodes.Select(node => $"{node.Data} => {node.Rand?.Data ?? "null"}");
+
+      return string.Join(" | ", nodeStrings);
+    }
+
     [Test]
     public void TestDeserialize() {
       using (var fileWriteStream = File.OpenWrite(SerializeFileName)) {
@@ -81,10 +93,10 @@ namespace RandomListSerialization {
         node = node.Next;
       }
 
-      CollectionAssert.AreEqual(
-        deserializedNodes.Select(node => $"{node.Data} + {node.Rand?.Data ?? "null"}"),
-        NodeList.Select(node => $"{node.Data} + {node.Rand?.Data ?? "null"}")
-      );
+      var deserializedNodesCombined = ReduceNodeList(deserializedNodes);
+      var initialNodesCombined = ReduceNodeList(NodeList);
+
+      Assert.AreEqual(deserializedNodesCombined, initialNodesCombined);
     }
 
     [TearDown]
